@@ -1,0 +1,55 @@
+=====================================
+コンパイラ大課題
+
+call-with-current-continuation の実装
+=====================================
+
+コンパイラをCPSで実装したので、call/cc は簡単に実装できました。
+
+======
+実行例
+======
+まず実行例を示します。
+
+% ./test.scm 
+./test.scm 
+> (CPS-Convert '(call/cc (lambda (cc)
+           (+ 1 (throw cc (list 2))))))
+(CPS-Convert '(call/cc (lambda (cc)
+           (+ 1 (throw cc (list 2))))))
+CPS-Conversion start...
+CPS-Conversion finished.
+;;; Evaled ;;;
+(Fix ((f1 (t5) t5)) (Fix ((f2 (t6 t7) (Apply t7 (2)))) (Apply f2 (f1 f1))))
+> (Fix ((f1 (t5) t5)) (Fix ((f2 (t6 t7) (Apply t7 (2)))) (Apply f2 (f1 f1))))
+(Fix ((f1 (t5) t5)) (Fix ((f2 (t6 t7) (Apply t7 (2)))) (Apply f2 (f1 f1))))
+;;; Evaled ;;;
+2
+
+以上のように正しく動いています。
+
+==========
+実装の方法
+==========
+では、実装の方法を説明します。
+call/cc の実装は、CPS-Conversion.scm でされています。
+ここで、call/cc は、通常の中間言語に変換されているので、あとは特別な処理は必要ありません。
+その変換部分のソースがこれです。
+
+      ...
+      (('call/cc f)
+       (let ((tk (gentmpv))
+             (tx (gentmpv)))
+         `(Fix ((,tk (,tx) ,(cont tx)))
+               ,(cps-convert f
+                             (lambda (new-f)
+                               `(Apply ,new-f (,tk ,tk)))))))
+      (('throw k (list . A))
+       (cps-convert k
+                    (lambda (new-k)
+                      (cps-convert-list-helper A
+                                               (lambda (new-A)
+                                                 `(Apply ,new-k ,new-A))))))
+      ...
+
+このように実装できます。

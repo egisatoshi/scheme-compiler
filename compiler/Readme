@@ -1,0 +1,153 @@
+====================
+コンパイラの構造
+====================
+
+--- CPS-Convertion ---
+
+--- Eta-Reduction ---
+
+--- Beta-Contraction ---
+
+--- Constant-Folding
+
+    -- Primop-Optimization --
+
+    -- If-Optimization --
+
+    -- Select-Optimization -- *
+
+    -- Beta-Expansion -- *
+ 
+--- Merge-Fixes --- **
+
+--- Closure-Convertion ---
+
+--- Register-Assignment ---
+
+--- Machine-code-Generation ---
+
+====================
+Auxiliary function
+====================
+
+--- Propagation ---
+
+--- Substitution ---
+
+--- Alpha-Transformation ---
+
+--- Free-Variable ---
+
+====================
+Compile Option
+====================
+
+--global-enable -g
+
+--stack-enable, -s
+
+--merge-fixes, -m
+
+--beta-expansion N, -b N
+
+--machine-code kind, -mc kind
+
+====================
+対象言語
+====================
+
+Exp ::=
+(cons e1 e2)
+(vecotor e1 ...)
+(make-vector i v)
+(vector-ref A i)
+(vector-set! A i e)
+(primop e1 ...)
+(if t te fe)
+(letrec ((f V B) ...) A)
+(apply f (list e1 ...))
+(let ((f e) ...) A)
+(call/cc)
+(throw)
+(receive F E B)
+(values . A)
+
+Primop-List ::=
+eq?
++ - * / modulo
+= > < >= <=
++. -. *. /.
+=. >. <.
+itof ftoi
+and or xor not
+logand logor logxor lognot
+sll srl
+read-byte read-word write-byte write-word
+
+type ::=
+0000 : unit
+0001 : boolean
+0010 : pair
+0011 : symbol
+0100 : integer
+0101 : real
+0110 : char
+0111 : string
+1000 : vector
+1001 : port
+1010 : procedure
+
+====================
+中間言語
+====================
+
+Exp ::=
+(Cons A W c)
+(Vector A W c)
+(Stack s A W c)
+(Alloc i v W c)
+(Select i r W c)
+(Put i r v W c)
+(Offset i r W c)
+(Primop i A W c)
+(If t tc fc)
+(Fix ((f V B) ...) A)
+(Apply f A)
+(Set x W c)
+(Global-Set x W c)
+
+Term ::=
+#t #f
+<integer>
+<real>
+<symbol>
+
+Primop-List ::=
++ - * / modulo
+= > <
++. -. *. /.
+=. >. <.
+itof ftoi
+and or xor not
+logand logor logxor lognot
+sll srl
+read-byte read-word write-byte write-word
+
+====================
+マシンコード
+====================
+
+Read /manual/design.txt
+
+====================
+min-rtのコンパイルの手順
+====================
+
+1.Translatorでmin-rt.mlをmin-rt.scmに変換。
+./translator min-rt
+
+2.Prelinkerでlibrary.scmをmin-rt.scmにくっつける。
+./prelinker.scm scheme-library.scm global.scm min-rt.scm > new-min-rt.scm
+
+3.Compilerでコンパイルする。
+./compile new-min-rt.scm > min-rt.asm
